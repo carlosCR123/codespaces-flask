@@ -1,1 +1,6 @@
 Flask==2.3.2
+dash
+google-api-core
+google-auth
+google-cloud-core
+google-cloud-storage
