@@ -2,7 +2,9 @@ import dash
 from dash import html
 from dash import dcc
 import plotly.graph_objects as go
+from google.oauth2 import service_account
 from google.cloud import storage
+from google.cloud import bigquery
 import numpy as np
 import pandas as pd
 from io import StringIO
@@ -10,15 +12,19 @@ from io import StringIO
 # para inicializar la aplicacion
 app = dash.Dash()
 
-bucket_name = 'cloudthon-homework-bucket'
-blob_name = 'regression_test2.csv'
-project_id = 'cloudthon-homework'
-credentials_path = 'cloudthon-homework-e9095dd7ef2e.json'
-storage_client = storage.Client.from_service_account_json(credentials_path)
+BUCKET_NAME = 'cloudthon-homework-bucket'
+BLOB_NAME = 'regression_test2.csv'
+CREDENTIALS_PATH = 'cloudthon-homework-e9095dd7ef2e.json'
+credentials = service_account.Credentials.from_service_account_file(
+    CREDENTIALS_PATH, scopes=["https://www.googleapis.com/auth/cloud-platform"]
+)
+storage_client = storage.Client(credentials= credentials, project= credentials.project_id)
+bigquery_client = bigquery.Client(credentials=credentials, project=credentials.project_id)
 
+#Function to fetch the CSV from GCP bucket
 def fetch_file_from_gcp():
-    bucket = storage_client.get_bucket(bucket_name)
-    blob = bucket.blob(blob_name)
+    bucket = storage_client.get_bucket(BUCKET_NAME)
+    blob = bucket.blob(BLOB_NAME)
     content = blob.download_as_text()
     data = pd.read_csv(StringIO(content))
     return data
@@ -58,4 +64,4 @@ app.layout = html.Div(id = 'parent',
                       ])
 
 if __name__ == '__main__':
-    app.run_server(port=5003)
+    app.run_server(host='0.0.0.0', debug=True, port=8080)
